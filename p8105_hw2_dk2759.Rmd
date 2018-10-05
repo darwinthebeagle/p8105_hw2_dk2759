@@ -8,26 +8,30 @@ output: github_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r}
+## Importing and Cleaning Data
+
+```{r import data}
 library(tidyverse)
+
+options(tibble.print_min = 5)
 
 ## Reading the data NYC Subway Entrance and Exit Data
 NYC_Subway_Data = read_csv(file = "./Data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv")
 names(NYC_Subway_Data)
 NYC_Subway_Data = janitor::clean_names(NYC_Subway_Data)
 names(NYC_Subway_Data)
+
+## Looking at data for errors
+NYC_Subway_Data
+skimr::skim(NYC_Subway_Data)
+select(NYC_Subway_Data, line, station_name, station_latitude, station_longitude, route1,   litter_number, gd0_weight, pups_born_alive)
+
+as.numeric()
 ```
+
 Clean the data; retain line, station, name, station latitude / longitude, routes served, entry, vending, entrance type, and ADA compliance. Convert the entry variable from character (YES vs NO) to a logical variable
 
-## R Markdown
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
-```
 
 ## Including Plots
 
