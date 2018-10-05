@@ -19,9 +19,7 @@ Importing Data
 options(tibble.print_min = 5)
 
 NYC_Subway_Data = read_csv(file = "./Data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv")
-names(NYC_Subway_Data)
 NYC_Subway_Data = janitor::clean_names(NYC_Subway_Data)
-names(NYC_Subway_Data)
 
 ## visual check of the data
 NYC_Subway_Data
@@ -32,7 +30,6 @@ Cleaning the data; retain line, station, name, station latitude / longitude, rou
 
 ```{r}
 select(NYC_Subway_Data, line, station_name, station_latitude, station_longitude, route1, route2, route3, route4, route5, route6, route7, route8, route9, route10, route11, entrance_type, entry, vending, ada)
-
 ```
 
 Convert the entry variable from character (YES vs NO) to a logical variable
@@ -46,13 +43,16 @@ skimr::skim(NYC_Subway_Data)
 ## ifelse(NYC_Subway_Data$entry, "YES", "NO")
 ```
 
-The `NYC_Subway_Data` dataset contains the following variables: line, station, name, station latitude / longitude, route(s) served, entry, vending, entrance type, and ADA compliance. Thus far I selected using `select` for those previously mentioned variables and converted the entry variable from a character to a logical variable. The dimensions are 1,868 x 19. And these data are not yet tidy.
+The `NYC_Subway_Data` dataset contains the following variables: line, station, name, station latitude / longitude, route(s) served, entry, vending, entrance type, and ADA compliance. Thus far I selected using `select` for those previously mentioned variables and converted the entry variable from a character to a logical variable. The dimensions are 1,868 x 19. And these data are not yet tidy - route columns are not distinct variables (ex: A, C, E, ... trains, instead of route1, route 2,...) but spread out route names over 11 different route columns.
 
 * How many distinct stations are there? Note that stations are identified both by name and by line (e.g. 125th St A/B/C/D; 125st 1; 125st 4/5); the distinct function may be useful here.
 
 ```{r}
-distinct(NYC_Subway_Data, )
+distinct_stations = distinct(NYC_Subway_Data, station_name, line)
+nrow(distinct_stations)
 ```
+
+ANS: There are `nrow(distinct_stations)`
 
 * How many stations are ADA compliant?
 
@@ -60,37 +60,75 @@ distinct(NYC_Subway_Data, )
 sum(NYC_Subway_Data$ada, na.rm = TRUE)
 ```
 
-ANS: There are 468 ADA compliant stations.
+ANS: There are `sum(NYC_Subway_Data$ada, na.rm = TRUE)` ADA compliant stations.
 
 * What proportion of station entrances / exits without vending allow entrance?
 
 ```{r}
-no_vending = filter(NYC_Subway_Data, vending == "NO")
-yes_entry = filter(NYC_Subway_Data, entry == "TRUE")
+accessway_no_vending = filter(NYC_Subway_Data, vending == "NO", entry == "TRUE")
+nrow(accessway_no_vending)/nrow(NYC_Subway_Data)*100
 ```
 
+ANS: `nrow(accessway_no_vending)/nrow(NYC_Subway_Data)*100`% station access points without vending allow entrance.
+
+Reformat data so that route number and route name are distinct variables. 
+
+* How many distinct stations serve the A train? Of the stations that serve the A train, how many are ADA compliant?
+
+Need to gather all the routes numbers and make a new route name variable. Count the number of stations with distinct.
+```{r}
+NYC_Subway_Tidy_Data = gather(NYC_Subway_Data, key = route_number, value = route_name, route1:route11)
+## visual check to see if my gather works
+skimr::skim(NYC_Subway_Tidy_Data)
+stations_Atrain = filter(NYC_Subway_Tidy_Data, route_name == "A")
+distinct_stations_Atrains = distinct(stations_Atrain, station_name)
+skimr::skim(distinct_stations_Atrain)
+nrow(distinct_stations_Atrain)
+```
+`nrow(distinct_stations_Atrain)` serve the A train.
+
+Now we need to distinct these stations by ADA
+```{r}
+Atrain_stations_ada = filter(NYC_Subway_Tidy_Data, route_name == "A", ada == TRUE)
+distinct_Atrain_stations_ada = distinct(Atrain_stations_ada, station_name)
+nrow(distinct_Atrain_stations_ada)
+```
+`nrow(distinct_Atrain_stations_ada)` of these A train stations are ADA compliant.
 
 ## Problem 2
 
-This problem uses the Mr. Trash Wheel dataset, available as an Excel file on the course website. Please use the  HealthyHarborWaterWheelTotals2017-9-26.xlsx version.
+This problem uses the Mr. Trash Wheel dataset, available as an Excel file on the course website.
 
-Read and clean the Mr. Trash Wheel sheet
+*Read and clean the Mr. Trash Wheel sheet
+*Specify the sheet in the Excel file and to omit columns containing notes (using the range argument and cell_cols() function)
+* Round number of sports balls to the nearest integer and converts the result to an integer variable
+```{r}
+library(readxl)
+
+mrtrashwheel_data = read_excel("./Data/HealthyHarborWaterWheelTotals2018-7-28.xlsx", sheet = 1, range = cell_cols("A:N"))
+  mrtrashwheel_data = janitor::clean_names(MrTrashWheel_Data)
+  mrtrashwheel_data_omit = na.omit(MrTrashWheel_Data)
+  mrtrashwheel_data_omit$sports_balls_integer <- as.integer(mrtrashwheel_data_omit$sports_balls)
+  skimr::skim(mrtrashwheel_data_omit)
+```
+
+Read and clean precipitation data for 2016 and 2017. For each, omit rows without precipitation data and add a variable year. Next, combine datasets and convert month to a character variable (the variable month.name is built into R and should be useful).
 
 ```{r}
 library(readxl)
-MrTrashWheel_Data = read_excel("./Data/HealthyHarborWaterWheelTotals2018-7-28.xlsx")
-MrTrashWheel_Data = janitor::clean_names(MrTrashWheel_Data)
-head(MrTrashWheel_Data, 5)
+rain2016 = read_excel("./Data/HealthyHarborWaterWheelTotals2018-7-28.xlsx", sheet = 5)
+rain2016_omit = na.omit(rain2016)
+rain2016_omit$year <- as.integer()
+
+library(readxl)
+rain2017 = read_excel("./Data/HealthyHarborWaterWheelTotals2018-7-28.xlsx", sheet = 4)
+rain2017_omit = na.omit(rain2017)
+rain2017_omit
 ```
-
-specify the sheet in the Excel file and to omit columns containing notes (using the range argument and cell_cols() function)
-use reasonable variable names
-omit rows that do not include dumpster-specific data
-rounds the number of sports balls to the nearest integer and converts the result to an integer variable (using  as.integer)
-Read and clean precipitation data for 2016 and 2017. For each, omit rows without precipitation data and add a variable year. Next, combine datasets and convert month to a character variable (the variable month.name is built into R and should be useful).
-
 Write a paragraph about these data; you are encouraged to use inline R. Be sure to note the number of observations in both resulting datasets, and give examples of key variables. For available data, what was the total precipitation in 2017? What was the median number of sports balls in a dumpster in 2016?
 
+These data show the amount of rain per month and the type and amount of trash that washes up. Key variables include sports balls, Precipitation (in), dumpster. etc.
+  
 ## Problem 3
 
 This problem uses the BRFSS data. DO NOT include this dataset in your local data directory; instead, load the data from the  p8105.datasets package.
