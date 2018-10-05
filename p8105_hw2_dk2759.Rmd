@@ -4,10 +4,20 @@ author: "Darwin Keung"
 date: "10/4/2018"
 output: github_document
 ---
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+```{r}
+library(tidyverse)
+
+## Reading the data NYC Subway Entrance and Exit Data
+NYC_Subway_Data = read_csv(file = "./Data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv")
+names(NYC_Subway_Data)
+NYC_Subway_Data = janitor::clean_names(NYC_Subway_Data)
+names(NYC_Subway_Data)
+```
+Clean the data; retain line, station, name, station latitude / longitude, routes served, entry, vending, entrance type, and ADA compliance. Convert the entry variable from character (YES vs NO) to a logical variable
 
 ## R Markdown
 
