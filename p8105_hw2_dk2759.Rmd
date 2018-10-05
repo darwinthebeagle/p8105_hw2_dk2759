@@ -8,7 +8,7 @@ output: github_document
 knitr::opts_chunk$set(echo = TRUE)
 
 library(tidyverse)
-library("dplyr")
+library(dplyr)
 ```
 
 ## Problem 1: NYC Subway Data 
@@ -39,12 +39,11 @@ Convert the entry variable from character (YES vs NO) to a logical variable
 
 ```{r}
 NYC_Subway_Data$entry <- as.logical(recode(NYC_Subway_Data$entry, "YES" = "TRUE", "NO" = "FALSE"))
-view(NYC_Subway_Data$entry)
+skimr::skim(NYC_Subway_Data)
 
+## mutate(NYC_Subway_Data, entry = recode(entry, "YES" = TRUE, "NO" = FALSE))
 
-mutate(NYC_Subway_Data$entry = recode(entry, "YES" = TRUE, "NO" = FALSE))
-
-ifelse(NYC_Subway_Data$entry, "YES", "NO")
+## ifelse(NYC_Subway_Data$entry, "YES", "NO")
 ```
 
 The `NYC_Subway_Data` dataset contains the following variables: line, station, name, station latitude / longitude, route(s) served, entry, vending, entrance type, and ADA compliance. Thus far I selected using `select` for those previously mentioned variables and converted the entry variable from a character to a logical variable. The dimensions are 1,868 x 19. And these data are not yet tidy.
@@ -56,10 +55,20 @@ distinct(NYC_Subway_Data, )
 ```
 
 * How many stations are ADA compliant?
-`sum(NYC_Subway_Data$ada, na.rm = TRUE)`
 
+```{r}
+sum(NYC_Subway_Data$ada, na.rm = TRUE)
+```
 
-What proportion of station entrances / exits without vending allow entrance?
+ANS: There are 468 ADA compliant stations.
+
+* What proportion of station entrances / exits without vending allow entrance?
+
+```{r}
+no_vending = filter(NYC_Subway_Data, vending == "NO")
+yes_entry = filter(NYC_Subway_Data, entry == "TRUE")
+```
+
 
 ## Problem 2
 
@@ -72,8 +81,6 @@ library(readxl)
 MrTrashWheel_Data = read_excel("./Data/HealthyHarborWaterWheelTotals2018-7-28.xlsx")
 MrTrashWheel_Data = janitor::clean_names(MrTrashWheel_Data)
 head(MrTrashWheel_Data, 5)
-
-
 ```
 
 specify the sheet in the Excel file and to omit columns containing notes (using the range argument and cell_cols() function)
